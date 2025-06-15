@@ -9,7 +9,13 @@ VIDEO_DIR = pathlib.Path(r"C:\Users\fmdt4\fmdt_final\videos")
 
 # mpv 실행파일 절대 경로
 MPV_CMD  = r"C:\Users\fmdt4\scoop\apps\mpv\current\mpv.exe"
-MPV_OPTS = ["--no-border", "--loop=inf", "--gpu-context=auto"]
+# mpv 실행 시 0.5초 페이드 인 필터 적용
+MPV_OPTS = [
+    "--no-border",
+    "--loop=inf",
+    "--gpu-context=auto",
+    "--vf=lavfi=fade=t=in:st=0:d=0.5",
+]
 
 # 모니터 인덱스 설정
 IDX_PROJECTOR = 1   # 빔프로젝터 연결된 모니터
@@ -57,7 +63,11 @@ def launch_and_swap(procs, idx, fname):
 
     procs[key] = newp
 
-def select_m(sim):   return f"m{sim}.mp4"
+def select_m(fence, sim):
+    """새 모니터용 영상 선택"""
+    if fence and sim:
+        return f"m{fence}_{sim}.mp4"
+    return "m0.mp4"
 def select_b(fence,sim):
     return "b0.mp4" if fence==0 else f"b{fence}_{sim}.mp4"
 
@@ -85,7 +95,7 @@ def main():
     last_pair = None
 
     # 초기 영상 재생
-    launch_and_swap(procs, IDX_NEW_MON, select_m(sim))
+    launch_and_swap(procs, IDX_NEW_MON, select_m(fence, sim))
     launch_and_swap(procs, IDX_PROJECTOR, select_b(fence, sim))
     last_sim  = sim
     last_pair = (fence, sim)
@@ -110,7 +120,7 @@ def main():
                         cnt_s += 1
                         if cnt_s >= 5: sim = 0
 
-            nm = select_m(sim)
+            nm = select_m(fence, sim)
             pb = select_b(fence, sim)
 
             # 새 모니터 변경 감지
